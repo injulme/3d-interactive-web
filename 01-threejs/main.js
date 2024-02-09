@@ -50,14 +50,9 @@ scene.add(directionalLight);
 // scene.add(directionalLightHelper);
 
 const gltfLoader = new GLTFLoader();
-// gltfLoader.load('/dancer.glb', (gltf) => {
-//   const character = gltf.scene;
-//   character.position.y = 0.8;
-//   character.scale.set(0.01, 0.01, 0.01);
-//   scene.add(character);
-// });
 const gltf = await gltfLoader.loadAsync('/dancer.glb');
 const character = gltf.scene;
+const animationClips = gltf.animations;
 character.position.y = 0.8;
 character.scale.set(0.01, 0.01, 0.01);
 character.castShadow = true;
@@ -71,6 +66,21 @@ character.traverse((obj) => {
 
 scene.add(character);
 
+const mixer = new THREE.AnimationMixer(character);
+const action = mixer.clipAction(animationClips[3]);
+action.setLoop(THREE.LoopRepeat);
+// action.setLoop(THREE.LoopPingPong);
+// action.setLoop(THREE.LoopOnce);
+// action.setDuration(10);
+// action.setEffectiveTimeScale(2);
+// action.setEffectiveWeight(0.5);
+
+action.play();
+
+// setTimeout(() => {
+//   mixer.clipAction(animationClips[3]).paused = true;
+// }, 3000);
+
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.03;
@@ -82,10 +92,14 @@ window.addEventListener('resize', () => {
   renderer.render(scene, camera);
 });
 
+const clock = new THREE.Clock();
 const render = () => {
   renderer.render(scene, camera);
   requestAnimationFrame(render);
   orbitControls.update();
+  if (mixer) {
+    mixer.update(clock.getDelta());
+  }
 };
 
 render();
