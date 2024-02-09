@@ -1,9 +1,16 @@
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
+import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.shadowMap.enabled = true;
+// renderer.shadowMap.type = THREE.BasicShadowMap;
+// renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -21,56 +28,78 @@ floor.castShadow = true;
 scene.add(floor);
 
 const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
 const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 boxMesh.castShadow = true;
 boxMesh.receiveShadow = true;
 boxMesh.position.y = 0.5;
 scene.add(boxMesh);
 
-// const ambientLight = new THREE.AmbientLight(0xffffff, 5);
-// scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+directionalLight.castShadow = true;
+directionalLight.position.set(3, 4, 5);
+directionalLight.lookAt(0, 0, 0);
+directionalLight.shadow.mapSize.width = 4096;
+directionalLight.shadow.mapSize.height = 4096;
+directionalLight.shadow.camera.top = 2;
+directionalLight.shadow.camera.bottom = -2;
+directionalLight.shadow.camera.left = -2;
+directionalLight.shadow.camera.right = 2;
 
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
-// directionalLight.castShadow = true;
-// directionalLight.position.set(3, 4, 5);
-// directionalLight.lookAt(0, 0, 0);
-// scene.add(directionalLight);
-// const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
-// scene.add(directionalLightHelper);
+directionalLight.shadow.camera.near = 0.1;
+directionalLight.shadow.camera.far = 100;
 
-// const hemisphereLight = new THREE.HemisphereLight(0xb4a912, 0x12f34f, 5);
-// hemisphereLight.position.set(0, 1, 0);
-// hemisphereLight.lookAt(0, 0, 0);
-// scene.add(hemisphereLight);
-// const hemisphereLightHelper = new THREE.HemisphereLightHelper(hemisphereLight, 1);
-// scene.add(hemisphereLightHelper);
+scene.add(directionalLight);
 
-// const pointLight = new THREE.PointLight(0xffffff, 5, 5, 4);
-// pointLight.castShadow = true;
-// pointLight.position.set(1, 1, 1);
-// scene.add(pointLight);
-// const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-// scene.add(pointLightHelper);
+const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
+scene.add(directionalLightHelper);
 
-// const rectAreaLight = new THREE.RectAreaLight(0xffffff, 5, 2, 2);
-// rectAreaLight.position.set(0, 1, 2);
-// scene.add(rectAreaLight);
+// const orbitControls = new OrbitControls(camera, renderer.domElement);
+// orbitControls.enableDamping = true;
+// orbitControls.dampingFactor = 0.03;
+// orbitControls.enableZoom = true;
+// orbitControls.enablePan = true;
+// orbitControls.enableRotate = true;
+// orbitControls.autoRotate = false;
+// orbitControls.autoRotateSpeed = 2;
+// orbitControls.maxPolarAngle = Math.PI / 2;
+// orbitControls.minPolarAngle = Math.PI / 4;
+// orbitControls.maxAzimuthAngle = Math.PI / 2;
+// orbitControls.minAzimuthAngle = -Math.PI / 2;
 
-const targetObj = new THREE.Object3D();
-scene.add(targetObj);
+// const flyControls = new FlyControls(camera, renderer.domElement);
+// flyControls.movementSpeed = 1;
+// flyControls.rollSpeed = Math.PI / 10;
+// flyControls.autoForward = false;
 
-const spotLight = new THREE.SpotLight(0xffffff, 10, 100, Math.PI / 4, 1, 1);
-spotLight.castShadow = true;
-spotLight.position.set(0, 5, 0);
-spotLight.target = targetObj;
-spotLight.target.position.set(1, 0, 2);
-scene.add(spotLight);
-const spotLightHelper = new THREE.SpotLightHelper(spotLight);
-scene.add(spotLightHelper);
+camera.position.set(0, 1, 5);
+// const firstPersonControls = new FirstPersonControls(camera, renderer.domElement);
+// firstPersonControls.lookSpeed = 0.1;
+// firstPersonControls.movementSpeed = 1;
+// firstPersonControls.lookVertical = true;
 
-const orbitControls = new OrbitControls(camera, renderer.domElement);
-orbitControls.update();
+// const pointerLockControls = new PointerLockControls(camera, renderer.domElement);
+// window.addEventListener('click', () => {
+//   pointerLockControls.lock();
+// });
+
+const trackballControls = new TrackballControls(camera, renderer.domElement);
+trackballControls.rotateSpeed = 2;
+trackballControls.zoomSpeed = 1.5;
+trackballControls.panSpeed = 0.5;
+trackballControls.noRotate = false;
+trackballControls.noZoom = false;
+trackballControls.noPan = false;
+trackballControls.staticMoving = false;
+trackballControls.dynamicDampingFactor = 0.05;
+
+const target = new THREE.Mesh(
+  new THREE.SphereGeometry(0.5),
+  new THREE.MeshStandardMaterial({ color: 0x0000ff }),
+);
+target.position.set(4, 0.5, 0);
+scene.add(target);
+trackballControls.target = target.position;
 
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -79,9 +108,15 @@ window.addEventListener('resize', () => {
   renderer.render(scene, camera);
 });
 
+const clock = new THREE.Clock();
+
 const render = () => {
   renderer.render(scene, camera);
   requestAnimationFrame(render);
+  // orbitControls.update();
+  // flyControls.update(clock.getDelta());
+  // firstPersonControls.update(clock.getDelta());
+  trackballControls.update();
 };
 
 render();
