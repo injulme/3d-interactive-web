@@ -20,8 +20,15 @@ const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 floor.castShadow = true;
-floor.name = 'FLOOR';
 scene.add(floor);
+
+const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+boxMesh.castShadow = true;
+boxMesh.receiveShadow = true;
+boxMesh.position.y = 0.5;
+// scene.add(boxMesh);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
 directionalLight.castShadow = true;
@@ -38,6 +45,9 @@ directionalLight.shadow.camera.near = 0.1;
 directionalLight.shadow.camera.far = 100;
 
 scene.add(directionalLight);
+
+// const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 1);
+// scene.add(directionalLightHelper);
 
 const gltfLoader = new GLTFLoader();
 const gltf = await gltfLoader.loadAsync('/dancer.glb');
@@ -58,28 +68,22 @@ scene.add(character);
 
 const mixer = new THREE.AnimationMixer(character);
 const action = mixer.clipAction(animationClips[3]);
-action.setLoop(THREE.LoopPingPong);
+action.setLoop(THREE.LoopRepeat);
+// action.setLoop(THREE.LoopPingPong);
+// action.setLoop(THREE.LoopOnce);
+// action.setDuration(10);
+// action.setEffectiveTimeScale(2);
+// action.setEffectiveWeight(0.5);
 
 action.play();
+
+// setTimeout(() => {
+//   mixer.clipAction(animationClips[3]).paused = true;
+// }, 3000);
 
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.03;
-
-const newPosition = new THREE.Vector3(0, 1, 0);
-const rayCaster = new THREE.Raycaster();
-
-renderer.domElement.addEventListener('pointerdown', (e) => {
-  const x = (e.clientX / window.innerWidth) * 2 - 1;
-  const y = -((e.clientY / window.innerHeight) * 2 - 1);
-
-  rayCaster.setFromCamera(new THREE.Vector2(x, y), camera);
-  const intersects = rayCaster.intersectObjects(scene.children);
-
-  const intersectFloor = intersects.find((i) => i.object.name === 'FLOOR');
-  newPosition.copy(intersectFloor.point);
-  newPosition.y = 1;
-});
 
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -89,22 +93,7 @@ window.addEventListener('resize', () => {
 });
 
 const clock = new THREE.Clock();
-const targetVector = new THREE.Vector3();
-
 const render = () => {
-  character.lookAt(newPosition);
-  targetVector.subVectors(newPosition, character.position).normalize().multiplyScalar(0.01);
-
-  if (
-    Math.abs(character.position.x - newPosition.x) >= 1 ||
-    Math.abs(character.position.z - newPosition.z) >= 1
-  ) {
-    character.position.x += targetVector.x;
-    character.position.z += targetVector.z;
-    action.stop();
-  }
-  action.play();
-
   renderer.render(scene, camera);
   requestAnimationFrame(render);
   orbitControls.update();
